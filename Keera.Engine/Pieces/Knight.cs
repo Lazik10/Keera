@@ -1,4 +1,5 @@
-﻿using Keera.Engine.Types;
+﻿using Keera.Engine.Game;
+using Keera.Engine.Types;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -9,12 +10,14 @@ namespace Keera.Engine.Pieces;
 
 public class Knight : Piece
 {
-    public Knight(Position position, Color color) : base(position, color, 3)
+    public Knight(Position position, Color color, Board board) : base(position, color, 3, board)
     {
     }
 
-    protected override bool CanMoveTo(Position position)
+    protected override List<Move> GetPossiblePositions()
     {
-        throw new NotImplementedException();
+        var possiblePositions = new List<Move>();
+
+        return possiblePositions;
     }
 }

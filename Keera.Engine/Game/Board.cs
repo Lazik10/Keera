@@ -6,15 +6,18 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Keera.Engine.Board
+namespace Keera.Engine.Game
 {
     public class Board
     {
         private readonly BoardPosition[,] BoardPositions;
 
+        public const int MaxFile = 8;
+        public const int MaxRank = 8;
+
         public Board()
         {
-            BoardPositions = new BoardPosition[8, 8];
+            BoardPositions = new BoardPosition[MaxRank, MaxFile];
 
             InitBoard();
         }
@@ -39,14 +42,14 @@ namespace Keera.Engine.Board
 
             var piecesArray = new char[] { 'r', 'n', 'b', 'q', 'k', 'p' };
 
-            var rank = 0;
+            var rank = MaxRank - 1;
             var file = 0;
 
             foreach (var p in position)
             {
                 if (p == '/')
                 {
-                    rank++;
+                    rank--;
                     file = 0;
                 }
                 else if (p >= '1' && p <= '8')
@@ -64,14 +67,16 @@ namespace Keera.Engine.Board
 
                     Piece piece = char.ToLower(p) switch
                     {
-                        'p' => new Pawn(piecePosition, pieceColor),
-                        'n' => new Knight(piecePosition, pieceColor),
-                        'b' => new Bishop(piecePosition, pieceColor),
-                        'r' => new Rook(piecePosition, pieceColor),
-                        'q' => new Queen(piecePosition, pieceColor),
-                        'k' => new King(piecePosition, pieceColor),
+                        'p' => new Pawn(piecePosition, pieceColor, this),
+                        'n' => new Knight(piecePosition, pieceColor, this),
+                        'b' => new Bishop(piecePosition, pieceColor, this),
+                        'r' => new Rook(piecePosition, pieceColor, this),
+                        'q' => new Queen(piecePosition, pieceColor, this),
+                        'k' => new King(piecePosition, pieceColor, this),
                         _ => throw new ArgumentException("Unsupported piece character")
                     };
+
+                    piece.OnPieceMoved += Piece_OnPieceMoved;
 
                     BoardPositions[rank, file].SetPiece(piece);
 
@@ -87,6 +92,21 @@ namespace Keera.Engine.Board
                     throw new Exception("Unsupported character in FEN notation");
                 }
             }
+        }
+
+        private void Piece_OnPieceMoved(object? sender, Move e)
+        {
+            var piece = sender as Piece;
+
+            BoardPositions[piece.Position.Rank, piece.Position.File].SetPiece(null);
+            BoardPositions[e.Position.Rank, e.Position.File].SetPiece(piece);
+            var s = "†";
+            // TODO: Add steps
+        }
+
+        public Piece? GetPieceOnPosition(Position position)
+        {
+            return BoardPositions[position.Rank, position.File].Piece;
         }
     }
 }

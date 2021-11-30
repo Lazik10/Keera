@@ -15,7 +15,7 @@ internal struct BoardPosition
         Position = position;
     }
 
-    public void SetPiece(Piece piece)
+    public void SetPiece(Piece? piece)
     {
         Piece = piece;
     }
