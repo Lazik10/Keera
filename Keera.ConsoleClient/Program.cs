@@ -14,17 +14,21 @@ namespace Keera.ConsoleClient
 
 
 
-            var pawn = board.GetPieceOnPosition(new Position(1, 0));
+            var pawn = board.GetPieceOnPosition(new Position(1, 1));
+            Bishop bishop = (Bishop)board.GetPieceOnPosition(new Position(4, 0));
+            if (bishop != null && bishop is Bishop)
+                bishop.PrintAvailableMovePositions();
 
-            pawn.OnPieceMoved += Pawn_OnPieceMoved;
+            if (pawn != null)
+                pawn.OnPieceMoved += Pawn_OnPieceMoved;
 
             pawn.MoveTo(new Position(5, 5));
 
-            pawn.MoveTo(new Position(3, 0));
-            pawn.MoveTo(new Position(4, 0));
-            pawn.MoveTo(new Position(5, 0));
-            pawn.MoveTo(new Position(6, 0));
+            pawn.MoveTo(new Position(3, 1));
+            pawn.MoveTo(new Position(4, 1));
+            pawn.MoveTo(new Position(5, 1));
             pawn.MoveTo(new Position(6, 1));
+            pawn.MoveTo(new Position(6, 2));
         }
 
         private static void Pawn_OnPieceMoved(object? sender, Move e)

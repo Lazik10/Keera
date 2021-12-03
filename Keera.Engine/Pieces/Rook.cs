@@ -16,7 +16,12 @@ public class Rook : Piece
 
     protected override List<Move> GetPossiblePositions()
     {
-        var possiblePositions = new List<Move>();
+        possiblePositions.Clear();
+
+        MovesScan(Direction.UP, Position, Board.MaxRank);
+        MovesScan(Direction.DOWN, Position, Board.MaxRank);
+        MovesScan(Direction.RIGHT, Position, Board.MaxRank);
+        MovesScan(Direction.LEFT, Position, Board.MaxRank);
 
         return possiblePositions;
     }

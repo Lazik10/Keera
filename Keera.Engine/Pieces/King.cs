@@ -16,7 +16,16 @@ public class King : Piece
 
     protected override List<Move> GetPossiblePositions()
     {
-        var possiblePositions = new List<Move>();
+        possiblePositions.Clear();
+
+        MovesScan(Direction.UP, Position, 1);
+        MovesScan(Direction.DOWN, Position, 1);
+        MovesScan(Direction.RIGHT, Position, 1);
+        MovesScan(Direction.LEFT, Position, 1);
+        MovesScan(Direction.LEFTUP, Position, 1);
+        MovesScan(Direction.LEFTDOWN, Position, 1);
+        MovesScan(Direction.RIGHTUP, Position, 1);
+        MovesScan(Direction.RIGHTDOWN, Position, 1);
 
         return possiblePositions;
     }

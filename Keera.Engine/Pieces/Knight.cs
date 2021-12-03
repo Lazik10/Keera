@@ -16,7 +16,20 @@ public class Knight : Piece
 
     protected override List<Move> GetPossiblePositions()
     {
-        var possiblePositions = new List<Move>();
+        possiblePositions.Clear();
+
+        // Up and right, Up and left
+        MovesScan(Direction.RIGHT, new Position(this.Position.Rank + 2, this.Position.File), 1);
+        MovesScan(Direction.LEFT, new Position(this.Position.Rank + 2, this.Position.File), 1);
+        // Down and right, Down and left
+        MovesScan(Direction.RIGHT, new Position(this.Position.Rank - 2, this.Position.File), 1);
+        MovesScan(Direction.LEFT, new Position(this.Position.Rank - 2, this.Position.File), 1);
+        // Right and up, Right and down
+        MovesScan(Direction.UP, new Position(this.Position.Rank, this.Position.File + 2), 1);
+        MovesScan(Direction.DOWN, new Position(this.Position.Rank, this.Position.File + 2), 1);
+        // Left up, Left down
+        MovesScan(Direction.UP, new Position(this.Position.Rank, this.Position.File - 2), 1);
+        MovesScan(Direction.DOWN, new Position(this.Position.Rank, this.Position.File - 2), 1);
 
         return possiblePositions;
     }

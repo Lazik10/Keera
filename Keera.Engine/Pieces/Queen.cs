@@ -16,7 +16,16 @@ public class Queen : Piece
 
     protected override List<Move> GetPossiblePositions()
     {
-        var possiblePositions = new List<Move>();
+        possiblePositions.Clear();
+
+        MovesScan(Direction.UP, Position, Board.MaxRank);
+        MovesScan(Direction.DOWN, Position, Board.MaxRank);
+        MovesScan(Direction.RIGHT, Position, Board.MaxRank);
+        MovesScan(Direction.LEFT, Position, Board.MaxRank);
+        MovesScan(Direction.LEFTUP, Position, Board.MaxRank);
+        MovesScan(Direction.LEFTDOWN, Position, Board.MaxRank);
+        MovesScan(Direction.RIGHTUP, Position, Board.MaxRank);
+        MovesScan(Direction.RIGHTDOWN, Position, Board.MaxRank);
 
         return possiblePositions;
     }
