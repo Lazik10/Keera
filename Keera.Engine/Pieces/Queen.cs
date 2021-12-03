@@ -12,6 +12,7 @@ public class Queen : Piece
 {
     public Queen(Position position, Color color, Board board) : base(position, color, 9, board)
     {
+        Code = color == Color.White ? 'Q' : 'q';
     }
 
     protected override List<Move> GetPossiblePositions()

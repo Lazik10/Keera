@@ -12,6 +12,7 @@ public class Knight : Piece
 {
     public Knight(Position position, Color color, Board board) : base(position, color, 3, board)
     {
+        Code = color == Color.White ? 'N' : 'n';
     }
 
     protected override List<Move> GetPossiblePositions()

@@ -13,6 +13,7 @@ public abstract class Piece
     public Position Position { get; private set; }
     public Color Color { get; init; }
     public uint Value { get; init; }
+    public char Code { get; set; }
 
     protected List<Move> possiblePositions;
 
@@ -39,12 +40,12 @@ public abstract class Piece
         var piece = Board.GetPieceOnPosition(position);
         if (piece == null)
         {
-            possibleMoves.Add(new Move(position, MoveType.Move));
+            possibleMoves.Add(new Move(Position, position, this, MoveType.Move));
             return true;
         }
         else if (Color != piece.Color)
         {
-            possibleMoves.Add(new Move(position, MoveType.Capture));
+            possibleMoves.Add(new Move(Position, position, this, MoveType.Capture, piece));
             return true;
         }
 
@@ -53,8 +54,8 @@ public abstract class Piece
 
     protected bool IsValidBoardPosition(Position position)
     {
-        if (position.Rank < Board.MaxRank && position.Rank > 0
-            && position.File < Board.MaxFile && position.File > 0)
+        if (position.Rank < Board.MaxRank && position.Rank >= 0
+            && position.File < Board.MaxFile && position.File >= 0)
             return true;
         return false;
     }
@@ -100,22 +101,23 @@ public abstract class Piece
     {
         var possiblePosititons = GetPossiblePositions();
 
-        move = possiblePosititons.Find(x => x.Position.Equals(position));
+        move = possiblePosititons.Find(x => x.EndPosition.Equals(position));
 
         return move != null;
     }
 
     public void MoveTo(Position position)
     {
-        if (!CanMoveTo(position, out var move))
+        if (!CanMoveTo(position, out var move) || move == null)
         {
             return;
         }
 
+        OnPieceMoved?.Invoke(this, move);
+
         Position = position;
 
         PieceMoved?.Invoke();
-        OnPieceMoved?.Invoke(this, move);
     }
 
     public void PrintAvailableMovePositions()
@@ -125,7 +127,7 @@ public abstract class Piece
         Console.WriteLine($"Number of available moves: { possiblePositions.Count }");
         foreach (Move move in possiblePositions)
         {
-            Console.WriteLine($"Move: { move.Position.Rank} { move.Position.File}");
+            Console.WriteLine($"Move: { move.EndPosition.Rank} { move.EndPosition.File}");
         }
     }
 }

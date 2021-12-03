@@ -12,6 +12,7 @@ public class King : Piece
 {
     public King(Position position, Color color, Board board) : base(position, color, 15, board)
     {
+        Code = color == Color.White ? 'K' : 'k';
     }
 
     protected override List<Move> GetPossiblePositions()

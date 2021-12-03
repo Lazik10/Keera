@@ -12,6 +12,7 @@ public class Rook : Piece
 {
     public Rook(Position position, Color color, Board board) : base(position, color, 5, board)
     {
+        Code = color == Color.White ? 'R' : 'r';
     }
 
     protected override List<Move> GetPossiblePositions()

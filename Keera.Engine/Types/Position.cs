@@ -10,4 +10,17 @@ public struct Position
         Rank = rank;
         File = file;
     }
+
+    public override string ToString()
+    {
+        return $"{(char)(File + 97)}{Rank + 1}";
+    }
+
+    public static Position FromString(string positionString)
+    {
+        var rank = int.Parse(positionString[1].ToString()) - 1;
+        var file = positionString[0] - 'a';
+
+        return new Position(rank, file);
+    }
 }

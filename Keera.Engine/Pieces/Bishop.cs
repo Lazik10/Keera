@@ -12,6 +12,7 @@ public class Bishop : Piece
 {
     public Bishop(Position position, Color color, Board board) : base(position, color, 3, board)
     {
+        Code = color == Color.White ? 'B' : 'b';
     }
 
     protected override List<Move> GetPossiblePositions()

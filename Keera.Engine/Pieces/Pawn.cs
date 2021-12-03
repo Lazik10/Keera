@@ -8,6 +8,7 @@ public class Pawn : Piece
     public Pawn(Position position, Color color, Board board) : base(position, color, 1, board)
     {
         movedFromStart = false;
+        Code = color == Color.White ? 'P' : 'p';
 
         PieceMoved = () =>
         {
@@ -57,12 +58,12 @@ public class Pawn : Piece
         var piece = Board.GetPieceOnPosition(position);
         if (piece == null)
         {
-            possibleMoves.Add(new Move(position, MoveType.Move));
+            possibleMoves.Add(new Move(Position, position, this, MoveType.Move));
             return true;
         }
         else if (Color != piece.Color && position.File != Position.File)
         {
-            possibleMoves.Add(new Move(position, MoveType.Capture));
+            possibleMoves.Add(new Move(Position, position, this, MoveType.Capture, piece));
             return true;
         }
 
