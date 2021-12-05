@@ -9,5 +9,8 @@ public enum Direction
     LEFTUP,
     LEFTDOWN,
     RIGHTUP,
-    RIGHTDOWN
+    RIGHTDOWN, 
+
+    QUEENSIDE,
+    KINGSIDE
 }

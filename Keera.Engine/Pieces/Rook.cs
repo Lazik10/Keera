@@ -1,10 +1,5 @@
 ﻿using Keera.Engine.Game;
 using Keera.Engine.Types;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Keera.Engine.Pieces;
 
@@ -12,8 +7,18 @@ public class Rook : Piece
 {
     public Rook(Position position, Color color, Board board) : base(position, color, 5, board)
     {
+        movedFromStart = false;
         Code = color == Color.White ? 'R' : 'r';
+
+        PieceMoved = () =>
+        {
+            movedFromStart = true;
+        };
     }
+
+    private bool movedFromStart;
+
+    public bool Moved() { return movedFromStart; }
 
     protected override List<Move> GetPossiblePositions()
     {

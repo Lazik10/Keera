@@ -1,10 +1,5 @@
 ﻿using Keera.Engine.Pieces;
 using Keera.Engine.Types;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Keera.Engine.Game;
 
@@ -13,11 +8,14 @@ public class Board
     private readonly BoardPosition[,] BoardPositions;
     private readonly List<string> MoveHistory;
 
+    Game Game { get; set; }
+
     public const int MaxFile = 8;
     public const int MaxRank = 8;
 
-    public Board()
+    public Board(Game game)
     {
+        Game = game;
         BoardPositions = new BoardPosition[MaxRank, MaxFile];
         MoveHistory = new List<string>();
 
@@ -98,7 +96,26 @@ public class Board
 
     private void Piece_OnPieceMoved(object? sender, Move e)
     {
-        var piece = sender as Piece;
+        if (sender is not Piece piece)
+        {
+            return;
+        }
+
+        // When Castling we need tu update also correct rook's position
+        if (piece.Code == 'k' || piece.Code == 'K')
+        {
+            if (e.Type == MoveType.CastlingQ || e.Type == MoveType.CastlingK)
+            {
+                int rookOffset = e.Type == MoveType.CastlingQ ? -4 : 3;
+                int moveOffset = e.Type == MoveType.CastlingQ ? 3 : -2;
+                Piece? rook = GetPieceOnPosition(new Position(piece.Position.Rank, piece.Position.File + rookOffset));
+                if (rook != null)
+                {
+                    BoardPositions[rook.Position.Rank, rook.Position.File + moveOffset].SetPiece(rook);
+                    BoardPositions[rook.Position.Rank, rook.Position.File].SetPiece(null);
+                }
+            }
+        }
 
         BoardPositions[e.StartPosition.Rank, e.StartPosition.File].SetPiece(null);
         BoardPositions[e.EndPosition.Rank, e.EndPosition.File].SetPiece(piece);
@@ -113,20 +130,19 @@ public class Board
         return BoardPositions[position.Rank, position.File].Piece;
     }
 
-
-
     public void MovePiece(string? moveString)
     {
         if (string.IsNullOrWhiteSpace(moveString))
             return;
 
-        var move = Move.FromString(moveString);
-
+        Move move = Move.FromString(moveString, Game);
         var piece = GetPieceOnPosition(move.StartPosition);
 
-        if (piece != null)
+        if (piece != null && piece.Color == Game.Turn)
         {
             piece.MoveTo(move.EndPosition);
+
+            Game.Turn = Game.Turn == Color.White ? Color.Black : Color.White;
         }
     }
 
@@ -148,10 +164,12 @@ public class Board
 
     public void PrintMoveHistory()
     {
-        Console.WriteLine($"Move history:");
+        Console.Write($"Move history: ");
         foreach (var move in MoveHistory)
         {
-            Console.WriteLine(move);
+            Console.Write(move + " ");
+            if (move == MoveHistory.Last())
+                Console.Write("\n");
         }
     }
 }

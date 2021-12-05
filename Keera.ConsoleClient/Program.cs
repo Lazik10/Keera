@@ -8,19 +8,23 @@ namespace Keera.ConsoleClient
     {
         public static void Main(string[] args)
         {
-            var board = new Board();
+            Player whitePlayer = new("Kurunzo", Color.White, new Elo());
+            Player blackPlayer = new("Lazik", Color.Black, new Elo());
 
-            board.LoadPosition("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR");
-
-            board.PrintBoard();
+            Game game = new(0, whitePlayer, blackPlayer);
+            game.Status = Game.GameStatus.running;
+            game.Chessboard.LoadPosition("r3k2r/pppppppp/8/8/8/8/PPPPPPPP/R3K2R");
+            game.Chessboard.PrintBoard();
 
             string? input;
             do
             {
+                Console.WriteLine($"Current turn: {game.Turn}");
                 input = Console.ReadLine();
-                board.MovePiece(input);
+                game.Chessboard.MovePiece(input);
+                game.Chessboard.PrintMoveHistory();
 
-            } while (input != "q");
+            } while (input != "q" && game.Status == Game.GameStatus.running);
 
             //var pawn = board.GetPieceOnPosition(new Position(1, 1));
             //Bishop bishop = (Bishop)board.GetPieceOnPosition(new Position(4, 0));

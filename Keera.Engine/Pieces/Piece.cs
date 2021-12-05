@@ -1,10 +1,5 @@
 ﻿using Keera.Engine.Game;
 using Keera.Engine.Types;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Keera.Engine.Pieces;
 
@@ -52,7 +47,7 @@ public abstract class Piece
         return false;
     }
 
-    protected bool IsValidBoardPosition(Position position)
+    protected static bool IsValidBoardPosition(Position position)
     {
         if (position.Rank < Board.MaxRank && position.Rank >= 0
             && position.File < Board.MaxFile && position.File >= 0)
@@ -127,7 +122,7 @@ public abstract class Piece
         Console.WriteLine($"Number of available moves: { possiblePositions.Count }");
         foreach (Move move in possiblePositions)
         {
-            Console.WriteLine($"Move: { move.EndPosition.Rank} { move.EndPosition.File}");
+            Console.WriteLine($"Move: { move.EndPosition.Rank} { move.EndPosition.File} { move.Type }");
         }
     }
 }

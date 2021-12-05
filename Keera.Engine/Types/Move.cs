@@ -4,7 +4,10 @@ namespace Keera.Engine.Types;
 
 public enum MoveType
 {
-    Move, Capture
+    Move,
+    Capture,
+    CastlingQ,
+    CastlingK
 }
 
 public class Move
@@ -32,20 +35,40 @@ public class Move
 
     public override string ToString()
     {
+        if (Type == MoveType.CastlingK)
+            return "O-O";
+        else if (Type == MoveType.CastlingQ)
+            return "O-O-O";
+
         return $"{Piece?.Code}{StartPosition}{(Type == MoveType.Capture ? "x" : "")}{CapturedPiece?.Code}{EndPosition}";
     }
 
-    public static Move FromString(string moveString)
+    public static Move FromString(string moveString, Game.Game game)
     {
         Position startPosition;
         Position endPosition;
         MoveType moveType;
 
-        startPosition = Position.FromString(moveString.Substring(1, 2));
-        moveType = moveString.Contains('x') ? MoveType.Capture : MoveType.Move;
-        endPosition = moveType == MoveType.Capture ? Position.FromString(moveString.Substring(4, 2)) : Position.FromString(moveString.Substring(3, 2));
+        if (moveString == "O-O-O")
+        {
+            moveType = MoveType.CastlingQ;
+            startPosition = game.Turn == Color.White ? new Position(0, 4) : new Position(7, 4);
+            endPosition = game.Turn == Color.White ? new Position(0, 2) : new Position(7, 2);
+        }
+        else if (moveString == "O-O")
+        {
+            moveType = MoveType.CastlingK;
+            startPosition = game.Turn == Color.White ? new Position(0, 4) : new Position(7, 4);
+            endPosition = game.Turn == Color.White ? new Position(0, 6) : new Position(7, 6);
+        }
+        else
+        {
+            startPosition = Position.FromString(moveString.Substring(1, 2));
+            moveType = moveString.Contains('x') ? MoveType.Capture : MoveType.Move;
+            endPosition = moveType == MoveType.Capture ? Position.FromString(moveString.Substring(4, 2)) : Position.FromString(moveString.Substring(3, 2));
+        }
 
-        var move = new Move(startPosition, endPosition, null, moveType);
+        Move move = new(startPosition, endPosition, null, moveType);
 
         return move;
     }
