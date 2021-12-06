@@ -28,7 +28,7 @@ public abstract class Piece
         possiblePositions = new List<Move>();
     }
 
-    protected abstract List<Move> GetPossiblePositions();
+    public abstract List<Move> GetPossiblePositions();
 
     protected virtual bool TryAddPossibleMove(List<Move> possibleMoves, Position position)
     {
@@ -49,10 +49,8 @@ public abstract class Piece
 
     protected static bool IsValidBoardPosition(Position position)
     {
-        if (position.Rank < Board.MaxRank && position.Rank >= 0
-            && position.File < Board.MaxFile && position.File >= 0)
-            return true;
-        return false;
+        return position.Rank < Board.MaxRank && position.Rank >= 0
+            && position.File < Board.MaxFile && position.File >= 0;
     }
 
     protected List<Move> MovesScan(Direction dir, Position position, int depth)
@@ -108,9 +106,9 @@ public abstract class Piece
             return;
         }
 
-        OnPieceMoved?.Invoke(this, move);
-
         Position = position;
+
+        OnPieceMoved?.Invoke(this, move);
 
         PieceMoved?.Invoke();
     }

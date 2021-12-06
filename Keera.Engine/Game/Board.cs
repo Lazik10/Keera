@@ -1,11 +1,14 @@
 ﻿using Keera.Engine.Pieces;
 using Keera.Engine.Types;
+using System.Collections.Generic;
+using System.Linq;
 
 namespace Keera.Engine.Game;
 
 public class Board
 {
-    private readonly BoardPosition[,] BoardPositions;
+    //private readonly BoardPosition[,] BoardPositions;
+    private readonly Dictionary<Position, BoardPosition> boardPositions;
     private readonly List<string> MoveHistory;
 
     Game Game { get; set; }
@@ -13,22 +16,37 @@ public class Board
     public const int MaxFile = 8;
     public const int MaxRank = 8;
 
+    private Dictionary<Color, List<Position>> capturePositions;
+
     public Board(Game game)
     {
         Game = game;
-        BoardPositions = new BoardPosition[MaxRank, MaxFile];
+        //BoardPositions = new BoardPosition[MaxRank, MaxFile];
+        boardPositions = new Dictionary<Position, BoardPosition>(MaxFile * MaxRank);
         MoveHistory = new List<string>();
+        capturePositions = new Dictionary<Color, List<Position>>();
+        capturePositions[Color.White] = new List<Position>();
+        capturePositions[Color.Black] = new List<Position>();
 
         InitBoard();
     }
 
     private void InitBoard()
     {
-        for (int rank = 0; rank < BoardPositions.GetLength(0); rank++)
+        //for (int rank = 0; rank < BoardPositions.GetLength(0); rank++)
+        //{
+        //    for (int file = 0; file < BoardPositions.GetLength(1); file++)
+        //    {
+        //        BoardPositions[rank, file] = new BoardPosition(null, (rank + file) % 2 == 0 ? Color.Black : Color.White, new Position(rank, file));
+        //    }
+        //}
+
+        for (int rank = 0; rank < MaxRank; rank++)
         {
-            for (int file = 0; file < BoardPositions.GetLength(1); file++)
+            for (int file = 0; file < MaxFile; file++)
             {
-                BoardPositions[rank, file] = new BoardPosition(null, (rank + file) % 2 == 0 ? Color.Black : Color.White, new Position(rank, file));
+                var pos = new Position(rank, file);
+                boardPositions.Add(pos, new BoardPosition(null, (rank + file) % 2 == 0 ? Color.Black : Color.White, pos));
             }
         }
     }
@@ -78,7 +96,8 @@ public class Board
 
                 piece.OnPieceMoved += Piece_OnPieceMoved;
 
-                BoardPositions[rank, file].SetPiece(piece);
+                //BoardPositions[rank, file].SetPiece(piece);
+                boardPositions[piecePosition].SetPiece(piece);
 
                 file++;
             }
@@ -111,23 +130,66 @@ public class Board
                 Piece? rook = GetPieceOnPosition(new Position(piece.Position.Rank, piece.Position.File + rookOffset));
                 if (rook != null)
                 {
-                    BoardPositions[rook.Position.Rank, rook.Position.File + moveOffset].SetPiece(rook);
-                    BoardPositions[rook.Position.Rank, rook.Position.File].SetPiece(null);
+                    //BoardPositions[rook.Position.Rank, rook.Position.File + moveOffset].SetPiece(rook);
+                    //BoardPositions[rook.Position.Rank, rook.Position.File].SetPiece(null);
+                    boardPositions[new Position(rook.Position.Rank, rook.Position.File + moveOffset)].SetPiece(rook);
+                    boardPositions[new Position(rook.Position.Rank, rook.Position.File)].SetPiece(null);
                 }
             }
         }
 
-        BoardPositions[e.StartPosition.Rank, e.StartPosition.File].SetPiece(null);
-        BoardPositions[e.EndPosition.Rank, e.EndPosition.File].SetPiece(piece);
+        // Swap pieces
+        //BoardPositions[e.StartPosition.Rank, e.StartPosition.File].SetPiece(null);
+        //BoardPositions[e.EndPosition.Rank, e.EndPosition.File].SetPiece(piece);
+        boardPositions[new Position(e.StartPosition.Rank, e.StartPosition.File)].SetPiece(null);
+        boardPositions[new Position(e.EndPosition.Rank, e.EndPosition.File)].SetPiece(piece);
 
+
+        // Re-calculate capture moves
+        var opponentsKing = boardPositions.Single(x => x.Value.Piece is King && x.Value.Piece.Color != Game.Turn);
+
+        // TODO: Find better solution
+        var tmp = opponentsKing.Value.Piece;
+        opponentsKing.Value.SetPiece(null);
+
+        capturePositions[Game.Turn].Clear();
+        foreach (var item in boardPositions)
+        {
+            if (item.Value.Piece is not null && item.Value.Piece.Color == Game.Turn)
+            {
+                capturePositions[Game.Turn].AddRange(item.Value.Piece.GetPossiblePositions().Select(x => x.EndPosition));
+            }
+        }
+
+        opponentsKing.Value.SetPiece(tmp);
+
+        // Check or Checkmate
+        if (capturePositions[Game.Turn].Contains(opponentsKing.Value.Position))
+        {
+            e.ChangeType(MoveType.Check);
+            
+            var kingPositions = opponentsKing.Value.Piece?.GetPossiblePositions().Select(x => x.EndPosition);
+            var result = kingPositions.Except(capturePositions[Game.Turn]);
+
+            if (!result.Any())
+            {
+                e.ChangeType(MoveType.Checkmate);
+            }
+        }
+
+        // Record completed move
         MoveHistory.Add(e.ToString());
+
+        // Change turn
+        Game.ChangeTurn(e);
 
         PrintBoard();
     }
 
     public Piece? GetPieceOnPosition(Position position)
     {
-        return BoardPositions[position.Rank, position.File].Piece;
+        //return BoardPositions[position.Rank, position.File].Piece;
+        return boardPositions[new Position(position.Rank, position.File)].Piece;
     }
 
     public void MovePiece(string? moveString)
@@ -141,8 +203,6 @@ public class Board
         if (piece != null && piece.Color == Game.Turn)
         {
             piece.MoveTo(move.EndPosition);
-
-            Game.Turn = Game.Turn == Color.White ? Color.Black : Color.White;
         }
     }
 
@@ -150,9 +210,9 @@ public class Board
     {
         Console.WriteLine("--------");
 
-        for (int rank = BoardPositions.GetLength(0) - 1; rank >= 0; rank--)
+        for (int rank = MaxRank - 1; rank >= 0; rank--)
         {
-            for (int file = 0; file < BoardPositions.GetLength(1); file++)
+            for (int file = 0; file < MaxFile; file++)
             {
                 Console.Write(GetPieceOnPosition(new Position(rank, file))?.Code ?? ' ');
             }

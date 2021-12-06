@@ -2,7 +2,7 @@
 
 namespace Keera.Engine.Types;
 
-internal struct BoardPosition
+public class BoardPosition
 {
     public Piece? Piece { get; private set; }
     public Color Color { get; private set; }

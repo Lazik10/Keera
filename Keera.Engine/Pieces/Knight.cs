@@ -10,7 +10,7 @@ public class Knight : Piece
         Code = color == Color.White ? 'N' : 'n';
     }
 
-    protected override List<Move> GetPossiblePositions()
+    public override List<Move> GetPossiblePositions()
     {
         possiblePositions.Clear();
 

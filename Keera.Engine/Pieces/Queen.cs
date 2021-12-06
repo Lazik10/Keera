@@ -10,7 +10,7 @@ public class Queen : Piece
         Code = color == Color.White ? 'Q' : 'q';
     }
 
-    protected override List<Move> GetPossiblePositions()
+    public override List<Move> GetPossiblePositions()
     {
         possiblePositions.Clear();
 

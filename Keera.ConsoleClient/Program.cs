@@ -12,8 +12,8 @@ namespace Keera.ConsoleClient
             Player blackPlayer = new("Lazik", Color.Black, new Elo());
 
             Game game = new(0, whitePlayer, blackPlayer);
-            game.Status = Game.GameStatus.running;
-            game.Chessboard.LoadPosition("r3k2r/pppppppp/8/8/8/8/PPPPPPPP/R3K2R");
+            game.Status = Game.GameStatus.Running;
+            game.Chessboard.LoadPosition("r3k3/ppppppp1/2P5/8/8/8/PPPPPPP1/R3K2R");
             game.Chessboard.PrintBoard();
 
             string? input;
@@ -24,9 +24,9 @@ namespace Keera.ConsoleClient
                 game.Chessboard.MovePiece(input);
                 game.Chessboard.PrintMoveHistory();
 
-            } while (input != "q" && game.Status == Game.GameStatus.running);
+            } while (input != "q" && game.Status == Game.GameStatus.Running);
 
-            //var pawn = board.GetPieceOnPosition(new Position(1, 1));
+
             //Bishop bishop = (Bishop)board.GetPieceOnPosition(new Position(4, 0));
             //if (bishop != null && bishop is Bishop)
             //    bishop.PrintAvailableMovePositions();

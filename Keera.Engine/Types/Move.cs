@@ -7,7 +7,9 @@ public enum MoveType
     Move,
     Capture,
     CastlingQ,
-    CastlingK
+    CastlingK,
+    Check,
+    Checkmate
 }
 
 public class Move
@@ -33,6 +35,11 @@ public class Move
         CapturedPiece = capturedPiece;
     }
 
+    public void ChangeType(MoveType type)
+    {
+        Type = type;
+    }
+
     public override string ToString()
     {
         if (Type == MoveType.CastlingK)
@@ -40,7 +47,7 @@ public class Move
         else if (Type == MoveType.CastlingQ)
             return "O-O-O";
 
-        return $"{Piece?.Code}{StartPosition}{(Type == MoveType.Capture ? "x" : "")}{CapturedPiece?.Code}{EndPosition}";
+        return $"{Piece?.Code}{StartPosition}{(Type == MoveType.Capture ? "x" : "")}{CapturedPiece?.Code}{EndPosition}{(Type == MoveType.Check ? "+" : "")}{(Type == MoveType.Checkmate ? "#" : "")}";
     }
 
     public static Move FromString(string moveString, Game.Game game)
@@ -68,8 +75,6 @@ public class Move
             endPosition = moveType == MoveType.Capture ? Position.FromString(moveString.Substring(4, 2)) : Position.FromString(moveString.Substring(3, 2));
         }
 
-        Move move = new(startPosition, endPosition, null, moveType);
-
-        return move;
+        return new(startPosition, endPosition, null, moveType);
     }
 }

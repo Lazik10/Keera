@@ -10,7 +10,7 @@ public class Bishop : Piece
         Code = color == Color.White ? 'B' : 'b';
     }
 
-    protected override List<Move> GetPossiblePositions()
+    public override List<Move> GetPossiblePositions()
     {
         possiblePositions.Clear();
 

@@ -19,7 +19,7 @@ public class King : Piece
 
     private bool movedFromStart;
 
-    protected override List<Move> GetPossiblePositions()
+    public override List<Move> GetPossiblePositions()
     {
         possiblePositions.Clear();
 

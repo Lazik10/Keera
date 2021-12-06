@@ -13,10 +13,10 @@ public class Game
     public static long GameId { get; set; }
 
     public enum GameStatus
-    { 
-        prepared,
-        running,
-        ended
+    {
+        Prepared,
+        Running,
+        Ended
     }
 
     public Game(long id, Player whitePlayer, Player blackPlayer)
@@ -25,8 +25,23 @@ public class Game
         Chessboard = new Board(this);
         WhitePlayer = whitePlayer;
         BlackPlayer = blackPlayer;
-        Status = GameStatus.prepared;
+        Status = GameStatus.Prepared;
         Turn = Color.White;
+    }
+
+    public void ChangeTurn(Move move)
+    {
+        if (move.Type == MoveType.Checkmate)
+        {
+            EndGame();
+        }
+
+        Turn = Turn == Color.White ? Color.Black : Color.White;
+    }
+
+    private void EndGame()
+    {
+        Status = GameStatus.Ended;
     }
 }
 

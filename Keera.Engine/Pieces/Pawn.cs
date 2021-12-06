@@ -18,7 +18,7 @@ public class Pawn : Piece
 
     private bool movedFromStart;
 
-    protected override List<Move> GetPossiblePositions()
+    public override List<Move> GetPossiblePositions()
     {
         var possiblePositions = new List<Move>();
 
@@ -55,6 +55,9 @@ public class Pawn : Piece
 
     protected override bool TryAddPossibleMove(List<Move> possibleMoves, Position position)
     {
+        if (!IsValidBoardPosition(position))
+            return false;
+
         var piece = Board.GetPieceOnPosition(position);
         if (piece == null)
         {

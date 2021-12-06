@@ -20,7 +20,7 @@ public class Rook : Piece
 
     public bool Moved() { return movedFromStart; }
 
-    protected override List<Move> GetPossiblePositions()
+    public override List<Move> GetPossiblePositions()
     {
         possiblePositions.Clear();
 
