@@ -18,6 +18,7 @@ public struct Position : IEquatable<Position>
 
     public static Position FromString(string positionString)
     {
+        // To Do: handle invalid position from string
         var rank = int.Parse(positionString[1].ToString()) - 1;
         var file = positionString[0] - 'a';
 

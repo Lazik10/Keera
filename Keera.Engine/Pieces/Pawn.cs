@@ -23,31 +23,28 @@ public class Pawn : Piece
         var possiblePositions = new List<Move>();
 
         var sign = Color == Color.White ? 1 : -1;
-        var rankBounds = Color == Color.White ? Position.Rank < Board.MaxRank - 1 : Position.Rank > 0;
 
-        if (rankBounds)
+        var position = new Position(Position.Rank + sign, Position.File);
+
+
+        if (TryAddPossibleMove(possiblePositions, position))
         {
-            var position = new Position(Position.Rank + sign, Position.File);
-
-            if (TryAddPossibleMove(possiblePositions, position))
+            if (!movedFromStart)
             {
-                if (!movedFromStart)
-                {
-                    position = new Position(Position.Rank + (Color == Color.White ? 2 : -2), Position.File);
-                    TryAddPossibleMove(possiblePositions, position);
-                }
-            }
-
-            if (Position.File > 0)
-            {
-                position = new Position(Position.Rank + sign, Position.File - 1);
+                position = new Position(Position.Rank + (Color == Color.White ? 2 : -2), Position.File);
                 TryAddPossibleMove(possiblePositions, position);
             }
-            if (Position.File < Board.MaxFile - 1)
-            {
-                position = new Position(Position.Rank + sign, Position.File + 1);
-                TryAddPossibleMove(possiblePositions, position);
-            }
+        }
+
+        if (Position.File > 0)
+        {
+            position = new Position(Position.Rank + sign, Position.File - 1);
+            TryAddPossibleMove(possiblePositions, position);
+        }
+        if (Position.File < Board.MaxFile - 1)
+        {
+            position = new Position(Position.Rank + sign, Position.File + 1);
+            TryAddPossibleMove(possiblePositions, position);
         }
 
         return possiblePositions;
@@ -71,5 +68,26 @@ public class Pawn : Piece
         }
 
         return false;
+    }
+
+    public static Piece Promote(Pawn promotedPawn, Move move)
+    {
+        Piece? piece;
+        Console.WriteLine("Set char for promoting piece type: ");
+        do
+        {
+            _ = char.TryParse(Console.ReadLine(), out char ch);
+            piece = ch switch
+            {
+                'n' => new Knight(move.EndPosition, promotedPawn.Color, promotedPawn.Board),
+                'b' => new Bishop(move.EndPosition, promotedPawn.Color, promotedPawn.Board),
+                'r' => new Rook(move.EndPosition, promotedPawn.Color, promotedPawn.Board),
+                'q' => new Queen(move.EndPosition, promotedPawn.Color, promotedPawn.Board),
+                _ => null
+            };
+
+        } while (piece == null);
+
+        return piece;
     }
 }
