@@ -117,6 +117,15 @@ public class Board
             }
         }
 
+        // Handle promoting
+        if (piece is Pawn)
+        {
+            if (piece.Color == Color.White && e.EndPosition.Rank == 7 || piece.Color == Color.Black && e.EndPosition.Rank == 0)
+            {
+                piece = Pawn.Promote((Pawn)piece, e);
+            }
+        }
+
         BoardPositions[e.StartPosition.Rank, e.StartPosition.File].SetPiece(null);
         BoardPositions[e.EndPosition.Rank, e.EndPosition.File].SetPiece(piece);
 
