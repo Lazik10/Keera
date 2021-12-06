@@ -130,20 +130,24 @@ public class Board
                 Piece? rook = GetPieceOnPosition(new Position(piece.Position.Rank, piece.Position.File + rookOffset));
                 if (rook != null)
                 {
-                    //BoardPositions[rook.Position.Rank, rook.Position.File + moveOffset].SetPiece(rook);
-                    //BoardPositions[rook.Position.Rank, rook.Position.File].SetPiece(null);
                     boardPositions[new Position(rook.Position.Rank, rook.Position.File + moveOffset)].SetPiece(rook);
                     boardPositions[new Position(rook.Position.Rank, rook.Position.File)].SetPiece(null);
                 }
             }
         }
 
+        // Handle promoting
+        if (piece is Pawn pawn)
+        {
+            if (piece.Color == Color.White && e.EndPosition.Rank == 7 || piece.Color == Color.Black && e.EndPosition.Rank == 0)
+            {
+                piece = Pawn.Promote(pawn, e);
+            }
+        }
+
         // Swap pieces
-        //BoardPositions[e.StartPosition.Rank, e.StartPosition.File].SetPiece(null);
-        //BoardPositions[e.EndPosition.Rank, e.EndPosition.File].SetPiece(piece);
         boardPositions[new Position(e.StartPosition.Rank, e.StartPosition.File)].SetPiece(null);
         boardPositions[new Position(e.EndPosition.Rank, e.EndPosition.File)].SetPiece(piece);
-
 
         // Re-calculate capture moves
         var opponentsKing = boardPositions.Single(x => x.Value.Piece is King && x.Value.Piece.Color != Game.Turn);
@@ -161,17 +165,6 @@ public class Board
             }
         }
 
-        // Handle promoting
-        if (piece is Pawn)
-        {
-            if (piece.Color == Color.White && e.EndPosition.Rank == 7 || piece.Color == Color.Black && e.EndPosition.Rank == 0)
-            {
-                piece = Pawn.Promote((Pawn)piece, e);
-            }
-        }
-
-        BoardPositions[e.StartPosition.Rank, e.StartPosition.File].SetPiece(null);
-        BoardPositions[e.EndPosition.Rank, e.EndPosition.File].SetPiece(piece);
         opponentsKing.Value.SetPiece(tmp);
 
         // Check or Checkmate
@@ -179,10 +172,9 @@ public class Board
         {
             e.ChangeType(MoveType.Check);
             
-            var kingPositions = opponentsKing.Value.Piece?.GetPossiblePositions().Select(x => x.EndPosition);
-            var result = kingPositions.Except(capturePositions[Game.Turn]);
+            var kingPositions = opponentsKing.Value.Piece?.GetPossiblePositions().Select(x => x.EndPosition).Except(capturePositions[Game.Turn]);
 
-            if (!result.Any())
+            if (!kingPositions?.Any() ?? true)
             {
                 e.ChangeType(MoveType.Checkmate);
             }

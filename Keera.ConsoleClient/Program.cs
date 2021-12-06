@@ -1,5 +1,4 @@
 ﻿using Keera.Engine.Game;
-using Keera.Engine.Pieces;
 using Keera.Engine.Types;
 
 namespace Keera.ConsoleClient
@@ -13,7 +12,9 @@ namespace Keera.ConsoleClient
 
             Game game = new(0, whitePlayer, blackPlayer);
             game.Status = Game.GameStatus.Running;
-            game.Chessboard.LoadPosition("r3k3/ppppppp1/2P5/8/8/8/PPPPPPP1/R3K2R");
+            // rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR
+            //game.Chessboard.LoadPosition("r3k3/ppppppp1/2P5/8/8/8/PPPPPPP1/R3K2R");
+            game.Chessboard.LoadPosition("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR");
             game.Chessboard.PrintBoard();
 
             string? input;
@@ -21,35 +22,16 @@ namespace Keera.ConsoleClient
             {
                 Console.WriteLine($"Current turn: {game.Turn}");
                 input = Console.ReadLine();
+
+                if (input == "q")
+                {
+                    break;
+                }
+
                 game.Chessboard.MovePiece(input);
                 game.Chessboard.PrintMoveHistory();
 
-            } while (input != "q" && game.Status == Game.GameStatus.Running);
-
-
-            //Bishop bishop = (Bishop)board.GetPieceOnPosition(new Position(4, 0));
-            //if (bishop != null && bishop is Bishop)
-            //    bishop.PrintAvailableMovePositions();
-
-            //if (pawn != null)
-            //    pawn.OnPieceMoved += Pawn_OnPieceMoved;
-
-            //pawn.MoveTo(new Position(5, 5));
-
-            //pawn.MoveTo(new Position(3, 1));
-            //pawn.MoveTo(new Position(4, 1));
-            //pawn.MoveTo(new Position(5, 1));
-            //pawn.MoveTo(new Position(6, 1));
-            //pawn.MoveTo(new Position(6, 2));
-
-            //board.PrintMoveHistory();
-        }
-
-        private static void Pawn_OnPieceMoved(object? sender, Move e)
-        {
-            var pawn = sender as Pawn;
-
-            Console.WriteLine($"Piece {pawn?.GetType().Name} moved to position {e.EndPosition.File} {e.EndPosition.Rank} ({e.EndPosition})");
+            } while (game.Status == Game.GameStatus.Running);
         }
     }
 }
