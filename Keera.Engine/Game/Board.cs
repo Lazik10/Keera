@@ -11,7 +11,7 @@ public class Board
     private readonly Dictionary<Position, BoardPosition> boardPositions;
     private readonly List<string> MoveHistory;
 
-    Game Game { get; set; }
+    public Game Game { get; set; }
 
     public const int MaxFile = 8;
     public const int MaxRank = 8;
@@ -136,12 +136,18 @@ public class Board
             }
         }
 
-        // Handle promoting
         if (piece is Pawn pawn)
         {
+            // Handle promoting
             if (piece.Color == Color.White && e.EndPosition.Rank == 7 || piece.Color == Color.Black && e.EndPosition.Rank == 0)
             {
                 piece = Pawn.Promote(pawn, e);
+            }
+
+            // En Passant move
+            if (e.Type == MoveType.EnPassant)
+            {
+                boardPositions[new Position(e.EndPosition.Rank + (piece.Color == Color.White ? -1 : 1), e.EndPosition.File)].SetPiece(null);
             }
         }
 

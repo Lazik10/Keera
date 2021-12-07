@@ -10,6 +10,8 @@ public class Game
     public GameStatus Status { get; set; }
     public Color Turn { get; set; }
 
+    public event EventHandler<Color>? OnTurnChanged;
+
     public static long GameId { get; set; }
 
     public enum GameStatus
@@ -37,6 +39,8 @@ public class Game
         }
 
         Turn = Turn == Color.White ? Color.Black : Color.White;
+
+        OnTurnChanged?.Invoke(this, Turn);
     }
 
     private void EndGame()

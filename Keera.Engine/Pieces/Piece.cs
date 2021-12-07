@@ -103,6 +103,7 @@ public abstract class Piece
     {
         if (!CanMoveTo(position, out var move) || move == null)
         {
+            Console.WriteLine("Inserted unavailable move");
             return;
         }
 

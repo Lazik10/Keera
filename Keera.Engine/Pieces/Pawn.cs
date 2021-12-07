@@ -8,7 +8,11 @@ public class Pawn : Piece
     public Pawn(Position position, Color color, Board board) : base(position, color, 1, board)
     {
         movedFromStart = false;
+        MovedByTwo = false;
         Code = color == Color.White ? 'P' : 'p';
+
+        OnPieceMoved += Pawn_MovedByTwo;
+        board.Game.OnTurnChanged += Pawn_ResetMovedByTwo;
 
         PieceMoved = () =>
         {
@@ -18,6 +22,8 @@ public class Pawn : Piece
 
     private bool movedFromStart;
 
+    public bool MovedByTwo { get; set; }
+
     public override List<Move> GetPossiblePositions()
     {
         var possiblePositions = new List<Move>();
@@ -25,7 +31,6 @@ public class Pawn : Piece
         var sign = Color == Color.White ? 1 : -1;
 
         var position = new Position(Position.Rank + sign, Position.File);
-
 
         if (TryAddPossibleMove(possiblePositions, position))
         {
@@ -58,8 +63,42 @@ public class Pawn : Piece
         var piece = Board.GetPieceOnPosition(position);
         if (piece == null)
         {
-            possibleMoves.Add(new Move(Position, position, this, MoveType.Move));
-            return true;
+            if (position.File == Position.File)
+            {
+                possibleMoves.Add(new Move(Position, position, this, MoveType.Move));
+                return true;
+            }
+            else
+            {
+
+                var sign = Color == Color.White ? 1 : -1;
+
+                Position neighbourPos = new (Board.MaxRank, Board.MaxFile);
+                Pawn? neighbourPawn = null;
+
+                // Right side
+                if (position.File == Position.File - sign)
+                {
+                    neighbourPos = new Position(Position.Rank, Position.File - (1 * sign));
+                }
+                // Left side
+                else if (position.File == Position.File + sign)
+                {
+                    neighbourPos = new Position(Position.Rank, Position.File + (1 * sign));
+                }
+
+                if (IsValidBoardPosition(neighbourPos))
+                {
+                    neighbourPawn = (Pawn?)Board?.GetPieceOnPosition(neighbourPos);
+
+                    if (neighbourPawn != null && neighbourPawn.MovedByTwo == true && !neighbourPawn.Color.Equals(Color))
+                    {
+                        possibleMoves.Add(new Move(Position, position, this, MoveType.EnPassant));
+                        return true;
+                    }
+                }
+                return false;
+            }
         }
         else if (Color != piece.Color && position.File != Position.File)
         {
@@ -68,6 +107,22 @@ public class Pawn : Piece
         }
 
         return false;
+    }
+
+    private void Pawn_MovedByTwo(object? sender, Move e)
+    {
+        if (Math.Abs(e.StartPosition.Rank - e.EndPosition.Rank) == 2)
+        {
+            MovedByTwo = true;
+        }
+    }
+
+    private void Pawn_ResetMovedByTwo(object? sender, Color turn)
+    {
+        if (MovedByTwo == true && turn == Color)
+        {
+            MovedByTwo = false;
+        }
     }
 
     public static Piece Promote(Pawn promotedPawn, Move move)

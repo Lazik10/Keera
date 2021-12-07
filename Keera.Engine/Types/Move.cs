@@ -5,6 +5,8 @@ namespace Keera.Engine.Types;
 public enum MoveType
 {
     Move,
+    MoveByTwo,
+    EnPassant,
     Capture,
     CastlingQ,
     CastlingK,
@@ -47,7 +49,12 @@ public class Move
         else if (Type == MoveType.CastlingQ)
             return "O-O-O";
 
-        return $"{Piece?.Code}{StartPosition}{(Type == MoveType.Capture ? "x" : "")}{CapturedPiece?.Code}{EndPosition}{(Type == MoveType.Check ? "+" : "")}{(Type == MoveType.Checkmate ? "#" : "")}";
+        return $"{Piece?.Code}{StartPosition}" +
+               $"{(Type == MoveType.Capture || Type == MoveType.EnPassant ? "x" : "")}" +
+               $"{CapturedPiece?.Code}{EndPosition}" +
+               $"{(Type == MoveType.Check ? "+" : "")}" +
+               $"{(Type == MoveType.Checkmate ? "#" : "")}" +
+               $"{(Type == MoveType.EnPassant ? " e.p." : "")}";
     }
 
     public static Move FromString(string moveString, Game.Game game)
