@@ -25,6 +25,7 @@ namespace Keera.ConsoleClient
 
                 if (input == "q")
                 {
+                    game.EndGame(Game.GameStatus.EndedByWin, whitePlayer, blackPlayer);
                     break;
                 }
 

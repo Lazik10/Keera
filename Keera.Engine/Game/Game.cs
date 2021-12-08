@@ -18,7 +18,9 @@ public class Game
     {
         Prepared,
         Running,
-        Ended
+        EndedByWin,
+        EndedByDraw,
+        UnknownState
     }
 
     public Game(long id, Player whitePlayer, Player blackPlayer)
@@ -35,7 +37,9 @@ public class Game
     {
         if (move.Type == MoveType.Checkmate)
         {
-            EndGame();
+            Player winner = Turn == Color.White ? WhitePlayer : BlackPlayer;
+            Player loser = Turn == Color.White ? BlackPlayer : WhitePlayer;
+            EndGame(GameStatus.EndedByWin, winner, loser);
         }
 
         Turn = Turn == Color.White ? Color.Black : Color.White;
@@ -43,9 +47,22 @@ public class Game
         OnTurnChanged?.Invoke(this, Turn);
     }
 
-    private void EndGame()
+    public void EndGame(GameStatus gameStatus, Player winner, Player loser)
     {
-        Status = GameStatus.Ended;
+        Status = gameStatus;
+
+        // Distribute Elo points
+        if (Status == GameStatus.EndedByWin)
+        {
+            Elo.Update(winner, 1, loser, 0);
+        }
+        else if (Status == GameStatus.EndedByDraw)
+        { 
+            Elo.Update(winner, 0.5f, loser, 0.5f);
+        }
+
+        winner.TotalGamesPlayed++;
+        loser.TotalGamesPlayed++;
     }
 }
 
