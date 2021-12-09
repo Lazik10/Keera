@@ -16,37 +16,64 @@ public class Board
     public const int MaxFile = 8;
     public const int MaxRank = 8;
 
-    private Dictionary<Color, List<Position>> capturePositions;
+    public Dictionary<Color, List<Position>> capturePositions;
+    public Dictionary<Color, List<Move>> PossibleMoves { get; set; }
 
     public Board(Game game)
     {
         Game = game;
-        //BoardPositions = new BoardPosition[MaxRank, MaxFile];
         boardPositions = new Dictionary<Position, BoardPosition>(MaxFile * MaxRank);
         MoveHistory = new List<string>();
-        capturePositions = new Dictionary<Color, List<Position>>();
-        capturePositions[Color.White] = new List<Position>();
-        capturePositions[Color.Black] = new List<Position>();
+        capturePositions = new Dictionary<Color, List<Position>>
+        {
+            [Color.White] = new List<Position>(),
+            [Color.Black] = new List<Position>()
+        };
+
+        PossibleMoves = new Dictionary<Color, List<Move>>
+        {
+            [Color.White] = new List<Move>(),
+            [Color.Black] = new List<Move>()
+        };
 
         InitBoard();
     }
 
     private void InitBoard()
     {
-        //for (int rank = 0; rank < BoardPositions.GetLength(0); rank++)
-        //{
-        //    for (int file = 0; file < BoardPositions.GetLength(1); file++)
-        //    {
-        //        BoardPositions[rank, file] = new BoardPosition(null, (rank + file) % 2 == 0 ? Color.Black : Color.White, new Position(rank, file));
-        //    }
-        //}
-
         for (int rank = 0; rank < MaxRank; rank++)
         {
             for (int file = 0; file < MaxFile; file++)
             {
                 var pos = new Position(rank, file);
                 boardPositions.Add(pos, new BoardPosition(null, (rank + file) % 2 == 0 ? Color.Black : Color.White, pos));
+            }
+        }
+    }
+
+    public void CalculatePossibleMoves(Color color, MoveType? moveType)
+    {
+        PossibleMoves[color].Clear();
+        foreach (var item in boardPositions)
+        {
+            if (item.Value.Piece is not null && item.Value.Piece.Color == color)
+            {
+                if (moveType == MoveType.Check && item.Value.Piece is King || moveType != MoveType.Check)
+                {
+                    PossibleMoves[color].AddRange(item.Value.Piece.GetPossiblePositions().Where(x => x.Type.HasFlag(MoveType.Move)));
+                }
+            }
+        }
+    }
+
+    public void CalculateCapturePositions(Color color)
+    {
+        capturePositions[color].Clear();
+        foreach (var item in boardPositions)
+        {
+            if (item.Value.Piece is not null && item.Value.Piece.Color == color)
+            {
+                capturePositions[color].AddRange(item.Value.Piece.GetPossiblePositions().Select(x => x.EndPosition));
             }
         }
     }
@@ -115,13 +142,16 @@ public class Board
 
     private void Piece_OnPieceMoved(object? sender, Move e)
     {
+        Console.WriteLine("Piece_OnPieceMoved");
+
         if (sender is not Piece piece)
         {
+            Console.WriteLine("Not piece");
             return;
         }
 
         // When Castling we need tu update also correct rook's position
-        if (piece.Code == 'k' || piece.Code == 'K')
+        if (piece is King king)
         {
             if (e.Type == MoveType.CastlingQ || e.Type == MoveType.CastlingK)
             {
@@ -142,6 +172,7 @@ public class Board
             if (piece.Color == Color.White && e.EndPosition.Rank == 7 || piece.Color == Color.Black && e.EndPosition.Rank == 0)
             {
                 piece = Pawn.Promote(pawn, e);
+                piece.OnPieceMoved += Piece_OnPieceMoved;
             }
 
             // En Passant move
@@ -155,44 +186,42 @@ public class Board
         boardPositions[new Position(e.StartPosition.Rank, e.StartPosition.File)].SetPiece(null);
         boardPositions[new Position(e.EndPosition.Rank, e.EndPosition.File)].SetPiece(piece);
 
-        // Re-calculate capture moves
-        var opponentsKing = boardPositions.Single(x => x.Value.Piece is King && x.Value.Piece.Color != Game.Turn);
-
         // TODO: Find better solution
+        var opponentsKing = boardPositions.Single(x => x.Value.Piece is King && x.Value.Piece.Color != Game.Turn);
         var tmp = opponentsKing.Value.Piece;
         opponentsKing.Value.SetPiece(null);
 
-        capturePositions[Game.Turn].Clear();
-        foreach (var item in boardPositions)
-        {
-            if (item.Value.Piece is not null && item.Value.Piece.Color == Game.Turn)
-            {
-                capturePositions[Game.Turn].AddRange(item.Value.Piece.GetPossiblePositions().Select(x => x.EndPosition));
-            }
-        }
+        // Re-calculate capture moves
+        CalculateCapturePositions(Game.Turn);
 
         opponentsKing.Value.SetPiece(tmp);
+
+        CalculatePossibleMoves(Game.Turn == Color.White ? Color.Black : Color.White, null);
 
         // Check or Checkmate
         if (capturePositions[Game.Turn].Contains(opponentsKing.Value.Position))
         {
-            e.ChangeType(MoveType.Check);
+            e.AddTypeFlag(MoveType.Check);
             
             var kingPositions = opponentsKing.Value.Piece?.GetPossiblePositions().Select(x => x.EndPosition).Except(capturePositions[Game.Turn]);
 
             if (!kingPositions?.Any() ?? true)
             {
-                e.ChangeType(MoveType.Checkmate);
+                e.AddTypeFlag(MoveType.Checkmate);
             }
         }
+
+        CalculateCapturePositions(Game.Turn);
 
         // Record completed move
         MoveHistory.Add(e.ToString());
 
-        // Change turn
-        Game.ChangeTurn(e);
-
         PrintBoard();
+
+        Console.WriteLine($"{e}");
+
+        // Change turn
+        Game.ChangeTurn(e.Type);
     }
 
     public Piece? GetPieceOnPosition(Position position)
@@ -217,18 +246,23 @@ public class Board
 
     public void PrintBoard()
     {
-        Console.WriteLine("--------");
+        Console.WriteLine("     a   b   c   d   e   f   g   h  ");
+        Console.WriteLine("    ─── ─── ─── ─── ─── ─── ─── ─── ");
 
         for (int rank = MaxRank - 1; rank >= 0; rank--)
         {
+            Console.Write($" {rank} │");
             for (int file = 0; file < MaxFile; file++)
             {
-                Console.Write(GetPieceOnPosition(new Position(rank, file))?.Code ?? ' ');
+                Console.Write($" {GetPieceOnPosition(new Position(rank, file))?.Code ?? ' '} ");
+                Console.Write("│");
             }
+            Console.Write($" {rank}");
 
             Console.WriteLine();
+            Console.WriteLine("    ─── ─── ─── ─── ─── ─── ─── ─── ");
         }
-        Console.WriteLine("--------");
+        Console.WriteLine("     a   b   c   d   e   f   g   h  ");
     }
 
     public void PrintMoveHistory()

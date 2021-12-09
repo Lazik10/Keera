@@ -7,32 +7,34 @@ namespace Keera.ConsoleClient
     {
         public static void Main(string[] args)
         {
-            Player whitePlayer = new("Kurunzo", Color.White, new Elo());
-            Player blackPlayer = new("Lazik", Color.Black, new Elo());
+            Player whitePlayer = new("Kurunzo", Color.White, PlayerType.AI, new Elo());
+            Player blackPlayer = new("Lazik", Color.Black, PlayerType.AI, new Elo());
 
-            Game game = new(0, whitePlayer, blackPlayer);
-            game.Status = Game.GameStatus.Running;
+            Game game = new(0, whitePlayer, blackPlayer, 3);
+            
             // rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR
             //game.Chessboard.LoadPosition("r3k3/ppppppp1/2P5/8/8/8/PPPPPPP1/R3K2R");
-            game.Chessboard.LoadPosition("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR");
+            game.Chessboard.LoadPosition("k1K5/8/8/8/8/8/8/8");
             game.Chessboard.PrintBoard();
 
-            string? input;
-            do
-            {
-                Console.WriteLine($"Current turn: {game.Turn}");
-                input = Console.ReadLine();
+            game.Start();
 
-                if (input == "q")
-                {
-                    game.EndGame(Game.GameStatus.EndedByWin, whitePlayer, blackPlayer);
-                    break;
-                }
+            //string? input;
+            //do
+            //{
+            //    Console.WriteLine($"Current turn: {game.Turn}");
+            //    input = Console.ReadLine();
 
-                game.Chessboard.MovePiece(input);
-                game.Chessboard.PrintMoveHistory();
+            //    if (input == "q")
+            //    {
+            //        game.EndGame(Game.GameStatus.EndedByWin, whitePlayer, blackPlayer);
+            //        break;
+            //    }
 
-            } while (game.Status == Game.GameStatus.Running);
+            //    game.Chessboard.MovePiece(input);
+            //    game.Chessboard.PrintMoveHistory();
+
+            //} while (game.Status == Game.GameStatus.Running);
         }
     }
 }

@@ -35,12 +35,17 @@ public abstract class Piece
         var piece = Board.GetPieceOnPosition(position);
         if (piece == null)
         {
+            if (this is King && Board.capturePositions[Color == Color.White ? Color.Black : Color.White].Contains(position))
+            {
+                return false;
+            }
+
             possibleMoves.Add(new Move(Position, position, this, MoveType.Move));
             return true;
         }
         else if (Color != piece.Color)
         {
-            possibleMoves.Add(new Move(Position, position, this, MoveType.Capture, piece));
+            possibleMoves.Add(new Move(Position, position, this, MoveType.Move | MoveType.Capture, piece));
             return true;
         }
 
@@ -79,7 +84,7 @@ public abstract class Piece
             else
             {
                 var lastmove = possiblePositions.Last();
-                if (lastmove.Type == MoveType.Capture) // Can't go further because enemy piece is in the way
+                if (lastmove.Type.HasFlag(MoveType.Capture)) // Can't go further because enemy piece is in the way
                     return possiblePositions;
             }
         }
@@ -109,9 +114,13 @@ public abstract class Piece
 
         Position = position;
 
+        Console.WriteLine("PieceMovedInvoke");
+        PieceMoved?.Invoke();
+
+        Console.WriteLine("OnPieceMovedInvoke");
         OnPieceMoved?.Invoke(this, move);
 
-        PieceMoved?.Invoke();
+        Console.WriteLine("MoveTo end");
     }
 
     public void PrintAvailableMovePositions()

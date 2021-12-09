@@ -2,16 +2,17 @@
 
 namespace Keera.Engine.Types;
 
+[Flags]
 public enum MoveType
 {
-    Move,
-    MoveByTwo,
-    EnPassant,
-    Capture,
-    CastlingQ,
-    CastlingK,
-    Check,
-    Checkmate
+    Move      = 0,
+    MoveByTwo = 1,
+    EnPassant = 2,
+    Capture   = 4,
+    CastlingQ = 8,
+    CastlingK = 16,
+    Check     = 32,
+    Checkmate = 64
 }
 
 public class Move
@@ -37,24 +38,24 @@ public class Move
         CapturedPiece = capturedPiece;
     }
 
-    public void ChangeType(MoveType type)
+    public void AddTypeFlag(MoveType type)
     {
-        Type = type;
+        Type |= type;
     }
 
     public override string ToString()
     {
-        if (Type == MoveType.CastlingK)
+        if (Type.HasFlag(MoveType.CastlingK))
             return "O-O";
-        else if (Type == MoveType.CastlingQ)
+        else if (Type.HasFlag(MoveType.CastlingQ))
             return "O-O-O";
 
         return $"{Piece?.Code}{StartPosition}" +
-               $"{(Type == MoveType.Capture || Type == MoveType.EnPassant ? "x" : "")}" +
+               $"{(Type.HasFlag(MoveType.Capture | MoveType.EnPassant) ? "x" : "")}" +
                $"{CapturedPiece?.Code}{EndPosition}" +
-               $"{(Type == MoveType.Check ? "+" : "")}" +
-               $"{(Type == MoveType.Checkmate ? "#" : "")}" +
-               $"{(Type == MoveType.EnPassant ? " e.p." : "")}";
+               $"{(Type.HasFlag(MoveType.Check) ? "+" : "")}" +
+               $"{(Type.HasFlag(MoveType.Checkmate) ? "#" : "")}" +
+               $"{(Type.HasFlag(MoveType.EnPassant) ? " e.p." : "")}";
     }
 
     public static Move FromString(string moveString, Game.Game game)
