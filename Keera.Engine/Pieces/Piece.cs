@@ -9,6 +9,7 @@ public abstract class Piece
     public Color Color { get; init; }
     public uint Value { get; init; }
     public char Code { get; set; }
+    public bool Protected { get; set; }
 
     protected List<Move> possiblePositions;
 
@@ -24,6 +25,7 @@ public abstract class Piece
         Color = color;
         Value = value;
         Board = board;
+        Protected = false;
 
         possiblePositions = new List<Move>();
     }
@@ -35,7 +37,7 @@ public abstract class Piece
         var piece = Board.GetPieceOnPosition(position);
         if (piece == null)
         {
-            if (this is King && Board.capturePositions[Color == Color.White ? Color.Black : Color.White].Contains(position))
+            if (this is King && Board.capturePositions[Color.All ^ Color].Contains(position))
             {
                 return false;
             }
@@ -45,8 +47,15 @@ public abstract class Piece
         }
         else if (Color != piece.Color)
         {
-            possibleMoves.Add(new Move(Position, position, this, MoveType.Move | MoveType.Capture, piece));
+            if (this is King && piece.Protected == true)
+                return false;
+
+            possibleMoves.Add(new Move(Position, position, this, MoveType.Move | (piece is King ? MoveType.Check : MoveType.Capture), piece));
             return true;
+        }
+        else if (Color == piece.Color)
+        { 
+            piece.Protected = true;
         }
 
         return false;
@@ -114,13 +123,8 @@ public abstract class Piece
 
         Position = position;
 
-        Console.WriteLine("PieceMovedInvoke");
         PieceMoved?.Invoke();
-
-        Console.WriteLine("OnPieceMovedInvoke");
         OnPieceMoved?.Invoke(this, move);
-
-        Console.WriteLine("MoveTo end");
     }
 
     public void PrintAvailableMovePositions()

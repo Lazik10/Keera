@@ -1,7 +1,6 @@
 ﻿using Keera.Engine.Pieces;
 using Keera.Engine.Types;
 using System.Diagnostics;
-using System.Linq;
 
 namespace Keera.Engine.Game;
 
@@ -64,7 +63,7 @@ public class Game
             Timers.Select(x => x.Value).ToList().ForEach(x => x.Stop());
 
             var winnerColor = Timers.Where(x => x.Value.ElapsedMilliseconds >= TimerMinutes * 1000 * 60).First().Key;
-            EndGame(GameStatus.EndedByWin, Players[winnerColor], Players[winnerColor == Color.White ? Color.Black : Color.Black]);
+            EndGame(GameStatus.EndedByWin, winnerColor, Color.All ^ winnerColor);
         }
     }
 
@@ -74,51 +73,65 @@ public class Game
 
         if (Players[Color.White].Type == PlayerType.AI)
         {
-            Chessboard.CalculateCapturePositions(Turn == Color.White ? Color.Black : Color.White);
-            Chessboard.CalculatePossibleMoves(Turn, null);
+            Chessboard.CalculateCapturePositions(Color.All ^ Turn);
+            Chessboard.CalculatePossibleMoves(Turn);
 
-            MakeTurn(null);
+            MakeTurn(Color.White);
         }
     }
 
-    public void MakeTurn(MoveType? moveType)
+    public void MakeTurn(Color playerColor)
     {
-        var move = Chessboard.PossibleMoves[Turn].Skip(_random.Next(Chessboard.PossibleMoves[Turn].Count - 1)).Take(1).First();
+        if (Chessboard.PossibleMoves[playerColor].Count > 0)
+        {
+            var move = Chessboard.PossibleMoves[Turn].Skip(_random.Next(Chessboard.PossibleMoves[Turn].Count - 1)).Take(1).First();
 
-        Console.WriteLine($"PM: {Chessboard.PossibleMoves[Turn].Count}");
-        Console.WriteLine($"KPM: {Chessboard.PossibleMoves[Turn].Where(x => x.Piece is King).ToList().Count}");
-
-        //Thread.Sleep(10);
-
-        move.Piece.MoveTo(move.EndPosition);
+            Console.ReadLine();
+            //Thread.Sleep(1);
+            move?.Piece?.MoveTo(move.EndPosition);
+        }
+        else
+        {
+            var piece = Chessboard.GetKing(false);
+            if (piece is King king && king.Checked == false)
+            {
+                EndGame(GameStatus.EndedByDraw, Color.All ^ Turn, Turn);
+                return;
+            }
+            else
+            {
+                EndGame(GameStatus.EndedByWin, Color.All ^ Turn, Turn);
+                return;
+            }
+        }
     }
 
     public void ChangeTurn(MoveType? moveType)
     {
-        if (moveType == MoveType.Checkmate)
-        {
-            EndGame(GameStatus.EndedByWin, Players[Turn], Players[Turn == Color.White ? Color.Black : Color.Black]);
-            return;
-        }
-
+        // Switch timers
         Timers[Turn].Stop();
-
-        Turn = Turn == Color.White ? Color.Black : Color.White;
-
+        Turn ^= Color.All;
         Timers[Turn].Start();
 
         OnTurnChanged?.Invoke(this, Turn);
 
+        Chessboard.PrintBoard();
+        Chessboard.CalculateCapturePositions(Color.All ^ Turn);
+        Chessboard.CalculatePossibleMoves(Turn);
+
         if (Players[Turn].Type == PlayerType.AI)
         {
-            MakeTurn(moveType);
+            MakeTurn(Turn);
         }
     }
 
-    public void EndGame(GameStatus gameStatus, Player winner, Player loser)
+    public void EndGame(GameStatus gameStatus, Color win, Color lose)
     {
         Status = gameStatus;
-        
+
+        Player winner = Players[win];
+        Player loser = Players[lose];
+
         Timers[winner.Color].Stop();
         Timers[loser.Color].Stop();
 
@@ -126,16 +139,16 @@ public class Game
         if (Status == GameStatus.EndedByWin)
         {
             Elo.Update(winner, 1, loser, 0);
+            Console.WriteLine($"Player {winner.Color} won");
         }
         else if (Status == GameStatus.EndedByDraw)
         { 
             Elo.Update(winner, 0.5f, loser, 0.5f);
+            Console.WriteLine("Game ended with draw");
         }
 
         winner.TotalGamesPlayed++;
         loser.TotalGamesPlayed++;
-
-        Console.WriteLine($"Player {winner.Color} won");
     }
 }
 

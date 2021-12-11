@@ -70,12 +70,12 @@ public class Pawn : Piece
             }
             else
             {
-                possibleMoves.Add(new Move(Position, position, this, MoveType.Capture));
+                possibleMoves.Add(new Move(Position, position, this, MoveType.Check));
 
                 var sign = Color == Color.White ? 1 : -1;
 
                 Position neighbourPos = new (Board.MaxRank, Board.MaxFile);
-                Piece? neighbourPiece = null;
+                Piece? neighbourPiece;
 
                 // Right side
                 if (position.File == Position.File - sign)
@@ -94,7 +94,7 @@ public class Pawn : Piece
 
                     if (neighbourPiece is Pawn pawn && pawn.MovedByTwo == true && !pawn.Color.Equals(Color))
                     {
-                        possibleMoves.Add(new Move(Position, position, this, MoveType.EnPassant | MoveType.Move | MoveType.Capture));
+                        possibleMoves.Add(new Move(Position, position, this, MoveType.EnPassant | MoveType.Check | MoveType.Capture));
                         return true;
                     }
                 }
@@ -103,7 +103,7 @@ public class Pawn : Piece
         }
         else if (Color != piece.Color && position.File != Position.File)
         {
-            possibleMoves.Add(new Move(Position, position, this, MoveType.Capture | MoveType.Move, piece));
+            possibleMoves.Add(new Move(Position, position, this, MoveType.Capture, piece));
             return true;
         }
 

@@ -43,6 +43,11 @@ public class Move
         Type |= type;
     }
 
+    public void RemoveTypeFlag(MoveType type)
+    {
+        Type &= ~type;
+    }
+
     public override string ToString()
     {
         if (Type.HasFlag(MoveType.CastlingK))

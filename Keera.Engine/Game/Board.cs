@@ -51,31 +51,58 @@ public class Board
         }
     }
 
-    public void CalculatePossibleMoves(Color color, MoveType? moveType)
+    public void CalculatePossibleMoves(Color color)
     {
-        PossibleMoves[color].Clear();
+        PossibleMoves[Color.Black].Clear();
+        PossibleMoves[Color.White].Clear();
+
         foreach (var item in boardPositions)
         {
             if (item.Value.Piece is not null && item.Value.Piece.Color == color)
             {
-                if (moveType == MoveType.Check && item.Value.Piece is King || moveType != MoveType.Check)
+                item.Value.Piece.Protected = false;
+            }
+        }
+
+        if (GetKing(false) is King king && king.Checked)
+        {
+            // DONE: If opponent's king is under attack/check, let him play only with him next turn
+            // TO DO:
+            // 1) - or find and add a possible move with his piece to hide him from check
+            // 2) - or add moves that allow him to capture piece who is threatening him
+            PossibleMoves[color].AddRange(king.GetPossiblePositions());
+        }
+        else
+        {
+            foreach (var item in boardPositions)
+            {
+                if (item.Value.Piece is not null && item.Value.Piece.Color == color)
                 {
-                    PossibleMoves[color].AddRange(item.Value.Piece.GetPossiblePositions().Where(x => x.Type.HasFlag(MoveType.Move)));
+                    PossibleMoves[color].AddRange(item.Value.Piece.GetPossiblePositions().Where(x => !(x.Type.HasFlag(MoveType.Check) && x.Piece is Pawn)));
                 }
             }
         }
+
+        Console.WriteLine($"{color} possible move positions: '{PossibleMoves[color].Count}' :");
+        PossibleMoves[color].ForEach(x => Console.Write(x.ToString() +"(" + x.Type.ToString()+ ")" + " "));
+        Console.WriteLine();
     }
 
     public void CalculateCapturePositions(Color color)
     {
-        capturePositions[color].Clear();
+        capturePositions[Color.White].Clear();
+        capturePositions[Color.Black].Clear();
         foreach (var item in boardPositions)
         {
             if (item.Value.Piece is not null && item.Value.Piece.Color == color)
             {
-                capturePositions[color].AddRange(item.Value.Piece.GetPossiblePositions().Select(x => x.EndPosition));
+                capturePositions[color].AddRange(item.Value.Piece.GetPossiblePositions().Where(x => !(x.Type.HasFlag(MoveType.Move) && x.Piece is Pawn)).Select(x => x.EndPosition));
             }
         }
+
+        Console.WriteLine($"{color} capture positions '{capturePositions[color].Count}' :");
+        capturePositions[color].ForEach(x => Console.Write(x.ToString() + " "));
+        Console.WriteLine();
     }
 
     public void LoadPosition(string position)
@@ -123,7 +150,6 @@ public class Board
 
                 piece.OnPieceMoved += Piece_OnPieceMoved;
 
-                //BoardPositions[rank, file].SetPiece(piece);
                 boardPositions[piecePosition].SetPiece(piece);
 
                 file++;
@@ -142,8 +168,6 @@ public class Board
 
     private void Piece_OnPieceMoved(object? sender, Move e)
     {
-        Console.WriteLine("Piece_OnPieceMoved");
-
         if (sender is not Piece piece)
         {
             Console.WriteLine("Not piece");
@@ -153,6 +177,8 @@ public class Board
         // When Castling we need tu update also correct rook's position
         if (piece is King king)
         {
+            king.Checked = false;
+
             if (e.Type == MoveType.CastlingQ || e.Type == MoveType.CastlingK)
             {
                 int rookOffset = e.Type == MoveType.CastlingQ ? -4 : 3;
@@ -186,39 +212,57 @@ public class Board
         boardPositions[new Position(e.StartPosition.Rank, e.StartPosition.File)].SetPiece(null);
         boardPositions[new Position(e.EndPosition.Rank, e.EndPosition.File)].SetPiece(piece);
 
+        // Info
+        Console.WriteLine($"{e}{e.Type}");
+        PrintBoard();
+
         // TODO: Find better solution
-        var opponentsKing = boardPositions.Single(x => x.Value.Piece is King && x.Value.Piece.Color != Game.Turn);
-        var tmp = opponentsKing.Value.Piece;
-        opponentsKing.Value.SetPiece(null);
+        var opponentsKingBoardPos = boardPositions.Single(x => x.Value.Piece is King && x.Value.Piece.Color != Game.Turn);
+        var opponentsKing = opponentsKingBoardPos.Value.Piece;
+        opponentsKingBoardPos.Value.SetPiece(null);
 
         // Re-calculate capture moves
         CalculateCapturePositions(Game.Turn);
 
-        opponentsKing.Value.SetPiece(tmp);
+        opponentsKingBoardPos.Value.SetPiece(opponentsKing);
 
-        CalculatePossibleMoves(Game.Turn == Color.White ? Color.Black : Color.White, null);
+        // Check if opponents king is under attack after piece moved
+        CalculatePossibleMoves(Game.Turn);
 
-        // Check or Checkmate
-        if (capturePositions[Game.Turn].Contains(opponentsKing.Value.Position))
+        foreach (var item in PossibleMoves[Game.Turn])
         {
-            e.AddTypeFlag(MoveType.Check);
-            
-            var kingPositions = opponentsKing.Value.Piece?.GetPossiblePositions().Select(x => x.EndPosition).Except(capturePositions[Game.Turn]);
+            if (item.EndPosition.Equals(opponentsKing.Position))
+            {
+                Console.WriteLine("CHECK");
+                e.AddTypeFlag(MoveType.Check);
+                if (opponentsKing is King _king)
+                    _king.Checked = true;
+            }
+        }
+
+        // Now check if it is not check mate
+        if (e.Type == MoveType.Check)
+        {
+            var kingPositions = opponentsKingBoardPos.Value.Piece?.GetPossiblePositions().Select(x => x.EndPosition).Except(capturePositions[Game.Turn]);
 
             if (!kingPositions?.Any() ?? true)
             {
                 e.AddTypeFlag(MoveType.Checkmate);
+                e.RemoveTypeFlag(MoveType.Check);
+                MoveHistory.Add(e.ToString());
+                PrintMoveHistory();
+
+                Game.Status = Game.GameStatus.EndedByWin;
+
+                Game.EndGame(Game.Status, Color.All ^ Game.Turn, Game.Turn);
+                return;
             }
         }
 
-        CalculateCapturePositions(Game.Turn);
-
         // Record completed move
         MoveHistory.Add(e.ToString());
-
-        PrintBoard();
-
-        Console.WriteLine($"{e}");
+        PrintMoveHistory();
+        Console.WriteLine("-------------------------------------------------------");
 
         // Change turn
         Game.ChangeTurn(e.Type);
@@ -226,8 +270,14 @@ public class Board
 
     public Piece? GetPieceOnPosition(Position position)
     {
-        //return BoardPositions[position.Rank, position.File].Piece;
         return boardPositions[new Position(position.Rank, position.File)].Piece;
+    }
+
+    public Piece GetKing(bool opponent)
+    {
+        var kingBoardPos = boardPositions.Single(x => x.Value.Piece is King && (opponent == true? x.Value.Piece.Color != Game.Turn : x.Value.Piece.Color == Game.Turn));
+        var king = kingBoardPos.Value.Piece;
+        return king;
     }
 
     public void MovePiece(string? moveString)
@@ -251,13 +301,13 @@ public class Board
 
         for (int rank = MaxRank - 1; rank >= 0; rank--)
         {
-            Console.Write($" {rank} │");
+            Console.Write($" {rank + 1} │");
             for (int file = 0; file < MaxFile; file++)
             {
                 Console.Write($" {GetPieceOnPosition(new Position(rank, file))?.Code ?? ' '} ");
                 Console.Write("│");
             }
-            Console.Write($" {rank}");
+            Console.Write($" {rank + 1}");
 
             Console.WriteLine();
             Console.WriteLine("    ─── ─── ─── ─── ─── ─── ─── ─── ");

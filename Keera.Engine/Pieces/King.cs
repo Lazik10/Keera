@@ -5,6 +5,7 @@ namespace Keera.Engine.Pieces;
 
 public class King : Piece
 {
+    public bool Checked { get; set; }
     public King(Position position, Color color, Board board) : base(position, color, 15, board)
     {
         movedFromStart = false;
@@ -15,6 +16,8 @@ public class King : Piece
         {
             movedFromStart = true;
         };
+
+        Checked = false;
     }
 
     private bool movedFromStart;
@@ -34,7 +37,7 @@ public class King : Piece
         if (!movedFromStart)
             GetPossibleCastlingMoves();
 
-        return possiblePositions.Where(x => !Board.capturePositions[Color == Color.White ? Color.Black : Color.White].Contains(x.EndPosition)).ToList();
+        return possiblePositions.Where(x => !Board.capturePositions[Color.All ^ Color].Contains(x.EndPosition)).ToList();
     }
 
     private void GetPossibleCastlingMoves()
@@ -43,14 +46,14 @@ public class King : Piece
         Piece? rookQSide = Board.GetPieceOnPosition(Color == Color.White ? new Position(0, 0) : new Position(7, 0));
         if (rookQSide != null && rookQSide is Rook rookQ && !rookQ.Moved())
         {
-            if (CheckForPossibleCastling(Direction.QUEENSIDE) && !Board.capturePositions[Color == Color.White ? Color.Black : Color.White].Contains(rookQSide.Position))
+            if (CheckForPossibleCastling(Direction.QUEENSIDE) && !Board.capturePositions[Color.All ^ Color].Contains(rookQSide.Position))
                 possiblePositions.Add(new Move(Position, new Position(Position.Rank, Position.File - 2), null, MoveType.Move | MoveType.CastlingQ));
         }
         // Castling King side
         Piece? rookKSide = Board.GetPieceOnPosition(Color == Color.White ? new Position(0, 7) : new Position(7, 7));
         if (rookKSide != null && rookKSide is Rook rookK && !rookK.Moved())
         {
-            if (CheckForPossibleCastling(Direction.KINGSIDE) && !Board.capturePositions[Color == Color.White ? Color.Black : Color.White].Contains(rookKSide.Position))
+            if (CheckForPossibleCastling(Direction.KINGSIDE) && !Board.capturePositions[Color.All ^ Color].Contains(rookKSide.Position))
                 possiblePositions.Add(new Move(Position, new Position(Position.Rank, Position.File + 2), null, MoveType.Move | MoveType.CastlingK));
         }
     }
@@ -66,7 +69,7 @@ public class King : Piece
             var pos = new Position(Position.Rank, Position.File + sign * i);
 
             piece = Board.GetPieceOnPosition(pos);
-            if (piece != null || Board.capturePositions[Color == Color.White ? Color.Black : Color.White].Contains(pos))
+            if (piece != null || Board.capturePositions[Color.All ^ Color].Contains(pos))
                 return false;
         }
         return true;
