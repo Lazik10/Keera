@@ -14,7 +14,7 @@ namespace Keera.ConsoleClient
             
             // rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR
             //game.Chessboard.LoadPosition("r3k3/ppppppp1/2P5/8/8/8/PPPPPPP1/R3K2R");
-            game.Chessboard.LoadPosition("k1K5/8/8/8/8/8/8/8");
+            game.Chessboard.LoadPosition("k7/8/8/8/8/8/7p/7K");
             game.Chessboard.PrintBoard();
 
             game.Start();

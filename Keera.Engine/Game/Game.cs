@@ -84,15 +84,19 @@ public class Game
     {
         if (Chessboard.PossibleMoves[playerColor].Count > 0)
         {
-            var move = Chessboard.PossibleMoves[Turn].Skip(_random.Next(Chessboard.PossibleMoves[Turn].Count - 1)).Take(1).First();
+            Move? move;
+            do
+            {
+                move = Chessboard.PossibleMoves[playerColor].Skip(_random.Next(Chessboard.PossibleMoves[playerColor].Count)).Take(1).First();
+            } while (!Chessboard.IsValidMove(move));
 
-            Console.ReadLine();
-            //Thread.Sleep(1);
+            //Console.ReadLine();
+            Thread.Sleep(1);
             move?.Piece?.MoveTo(move.EndPosition);
         }
         else
         {
-            var piece = Chessboard.GetKing(false);
+            var piece = Chessboard.GetKing(playerColor);
             if (piece is King king && king.Checked == false)
             {
                 EndGame(GameStatus.EndedByDraw, Color.All ^ Turn, Turn);
@@ -115,13 +119,22 @@ public class Game
 
         OnTurnChanged?.Invoke(this, Turn);
 
-        Chessboard.PrintBoard();
-        Chessboard.CalculateCapturePositions(Color.All ^ Turn);
+        //Chessboard.PrintBoard();
         Chessboard.CalculatePossibleMoves(Turn);
 
         if (Players[Turn].Type == PlayerType.AI)
         {
             MakeTurn(Turn);
+        }
+        else if (Players[Turn].Type == PlayerType.Human)
+        {
+            Console.WriteLine($"Current turn: {Turn}");
+            string? input;
+            do
+            {
+                input = Console.ReadLine();
+            }
+            while (!Chessboard.MovePiece(input));
         }
     }
 

@@ -47,14 +47,14 @@ public class King : Piece
         if (rookQSide != null && rookQSide is Rook rookQ && !rookQ.Moved())
         {
             if (CheckForPossibleCastling(Direction.QUEENSIDE) && !Board.capturePositions[Color.All ^ Color].Contains(rookQSide.Position))
-                possiblePositions.Add(new Move(Position, new Position(Position.Rank, Position.File - 2), null, MoveType.Move | MoveType.CastlingQ));
+                possiblePositions.Add(new Move(Position, new Position(Position.Rank, Position.File - 2), this, MoveType.Move | MoveType.CastlingQ));
         }
         // Castling King side
         Piece? rookKSide = Board.GetPieceOnPosition(Color == Color.White ? new Position(0, 7) : new Position(7, 7));
         if (rookKSide != null && rookKSide is Rook rookK && !rookK.Moved())
         {
             if (CheckForPossibleCastling(Direction.KINGSIDE) && !Board.capturePositions[Color.All ^ Color].Contains(rookKSide.Position))
-                possiblePositions.Add(new Move(Position, new Position(Position.Rank, Position.File + 2), null, MoveType.Move | MoveType.CastlingK));
+                possiblePositions.Add(new Move(Position, new Position(Position.Rank, Position.File + 2), this, MoveType.Move | MoveType.CastlingK));
         }
     }
 

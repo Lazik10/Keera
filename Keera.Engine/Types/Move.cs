@@ -5,14 +5,14 @@ namespace Keera.Engine.Types;
 [Flags]
 public enum MoveType
 {
-    Move      = 0,
-    MoveByTwo = 1,
-    EnPassant = 2,
-    Capture   = 4,
-    CastlingQ = 8,
-    CastlingK = 16,
-    Check     = 32,
-    Checkmate = 64
+    Move      = 1,
+    MoveByTwo = 2,
+    EnPassant = 4,
+    Capture   = 8,
+    CastlingQ = 16,
+    CastlingK = 32,
+    Check     = 64,
+    Checkmate = 128
 }
 
 public class Move
@@ -20,7 +20,7 @@ public class Move
     public Position StartPosition { get; private set; }
     public Position EndPosition { get; private set; }
 
-    public Piece? Piece { get; private set; }
+    public Piece? Piece { get; set; }
     public Piece? CapturedPiece { get; private set; }
 
     public MoveType Type { get; private set; }
@@ -56,7 +56,7 @@ public class Move
             return "O-O-O";
 
         return $"{Piece?.Code}{StartPosition}" +
-               $"{(Type.HasFlag(MoveType.Capture | MoveType.EnPassant) ? "x" : "")}" +
+               $"{(Type.HasFlag(MoveType.Capture) || Type.HasFlag(MoveType.EnPassant) ? "x" : "")}" +
                $"{CapturedPiece?.Code}{EndPosition}" +
                $"{(Type.HasFlag(MoveType.Check) ? "+" : "")}" +
                $"{(Type.HasFlag(MoveType.Checkmate) ? "#" : "")}" +

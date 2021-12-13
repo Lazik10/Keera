@@ -13,6 +13,11 @@ public abstract class Piece
 
     protected List<Move> possiblePositions;
 
+    protected Dictionary<Direction, List<Position>> avoidCheckPositionsDic;
+
+    public List<Position> avoidCheckPositionsList; 
+    public bool ThreateningEnemyKing { get; set; }
+
     protected Board Board;
 
     protected Action? PieceMoved;
@@ -26,8 +31,22 @@ public abstract class Piece
         Value = value;
         Board = board;
         Protected = false;
+        ThreateningEnemyKing = false;
 
         possiblePositions = new List<Move>();
+        avoidCheckPositionsDic = new Dictionary<Direction, List<Position>>();
+
+        avoidCheckPositionsDic = new Dictionary<Direction, List<Position>>
+        {
+            [Direction.UP] = new List<Position>(),
+            [Direction.DOWN] = new List<Position>(),
+            [Direction.LEFT] = new List<Position>(),
+            [Direction.RIGHT] = new List<Position>(),
+            [Direction.LEFTDOWN] = new List<Position>(),
+            [Direction.RIGHTDOWN] = new List<Position>(),
+            [Direction.LEFTUP] = new List<Position>(),
+            [Direction.RIGHTUP] = new List<Position>(),
+        };
     }
 
     public abstract List<Move> GetPossiblePositions();
@@ -50,7 +69,12 @@ public abstract class Piece
             if (this is King && piece.Protected == true)
                 return false;
 
-            possibleMoves.Add(new Move(Position, position, this, MoveType.Move | (piece is King ? MoveType.Check : MoveType.Capture), piece));
+            possibleMoves.Add(new Move(Position, position, this, MoveType.Move | (piece is King ? MoveType.Check | MoveType.Capture : MoveType.Capture), piece));
+
+            if (piece is King)
+            {
+                ThreateningEnemyKing = true;
+            }
             return true;
         }
         else if (Color == piece.Color)
@@ -92,9 +116,19 @@ public abstract class Piece
                 return possiblePositions;
             else
             {
+                avoidCheckPositionsDic[dir].Add(position);
+
                 var lastmove = possiblePositions.Last();
                 if (lastmove.Type.HasFlag(MoveType.Capture)) // Can't go further because enemy piece is in the way
+                {
+                    if (ThreateningEnemyKing)
+                    {
+                        avoidCheckPositionsList = avoidCheckPositionsDic[dir].ToList();
+                        avoidCheckPositionsList.Add(Position);
+                    }
+                    avoidCheckPositionsDic[dir].Clear();
                     return possiblePositions;
+                }
             }
         }
 
